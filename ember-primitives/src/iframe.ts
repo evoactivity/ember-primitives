@@ -5,7 +5,7 @@
  * import { inIframe } from 'ember-primitives/iframe';
  *
  * <template>
- *   {{#if (inFrame)}}
+ *   {{#if (inIframe)}}
  *     only show content in an iframe
  *   {{/if}}
  * </template>
