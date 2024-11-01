@@ -7,7 +7,7 @@ import { on } from '@ember/modifier';
 
 import { modifier } from 'ember-modifier';
 
-export interface ZoetropeSignature {
+export interface Signature {
   Args: {
     /**
      * The distance in pixels between each item in the slider.
@@ -21,17 +21,46 @@ export interface ZoetropeSignature {
     offset?: number;
   };
   Blocks: {
+    /**
+     * The content block is where the items that will be scrolled are placed.
+     */
     content: [];
+
+    /**
+     * The controls block is where the left and right buttons are placed.
+     */
     controls: [
       {
+        /**
+         * Whether the slider can scroll.
+         */
         canScroll: boolean;
+
+        /**
+         * Whether the slider cannot scroll left.
+         */
         cannotScrollLeft: boolean;
+
+        /**
+         * Whether the slider cannot scroll right.
+         */
         cannotScrollRight: boolean;
+
+        /**
+         * The function to scroll the slider left.
+         */
         scrollLeft: () => void;
+
+        /**
+         * The function to scroll the slider right.
+         */
         scrollRight: () => void;
       },
     ];
-    empty: [];
+
+    /**
+     * The header block is where the header content is placed.
+     */
     header: [];
   };
   Element: HTMLElement;
@@ -40,9 +69,8 @@ export interface ZoetropeSignature {
 const DEFAULT_GAP = 8;
 const DEFAULT_OFFSET = 0;
 
-export class Zoetrope extends Component<ZoetropeSignature> {
-  scrollerElement: HTMLElement | null = null;
-
+export class Zoetrope extends Component<Signature> {
+  @tracked scrollerElement: HTMLElement | null = null;
   @tracked currentlyScrolled = 0;
   @tracked scrollWidth = 0;
   @tracked offsetWidth = 0;
@@ -79,8 +107,6 @@ export class Zoetrope extends Component<ZoetropeSignature> {
   private tabListener = (event: KeyboardEvent) => {
     const target = event.target as HTMLElement;
     const { key, shiftKey } = event;
-
-    console.log('tabListener', key, shiftKey);
 
     if (!this.scrollerElement || this.scrollerElement === target) {
       return;
@@ -276,52 +302,53 @@ export class Zoetrope extends Component<ZoetropeSignature> {
   }
 
   <template>
-    <div class="zoetrope" {{this.setCSSVariables gap=this.gap offset=this.offset}} ...attributes>
-      <div class="zoetrope-header">
-        {{yield to="header"}}
-      </div>
-      <div class="zoetrope-controls">
-        {{#if (has-block "controls")}}
-          {{#if this.canScroll}}
-            {{yield
-              (hash
-                cannotScrollLeft=this.cannotScrollLeft
-                cannotScrollRight=this.cannotScrollRight
-                canScroll=this.canScroll
-                scrollLeft=this.scrollLeft
-                scrollRight=this.scrollRight
-              )
-              to="controls"
-            }}
-          {{/if}}
-        {{else}}
-          {{#if this.canScroll}}
-            <div>
-              <button
-                type="button"
-                {{on "click" this.scrollLeft}}
-                disabled={{this.cannotScrollLeft}}
-              >Left</button>
+    <section
+      class="zoetrope"
+      {{this.setCSSVariables gap=this.gap offset=this.offset}}
+      ...attributes
+    >
+      {{#if (has-block "header")}}
+        <div class="zoetrope-header">
+          {{yield to="header"}}
+        </div>
+      {{/if}}
 
-              <button
-                type="button"
-                {{on "click" this.scrollRight}}
-                disabled={{this.cannotScrollRight}}
-              >Right</button>
-            </div>
-          {{/if}}
+      {{#if (has-block "controls")}}
+        {{#if this.canScroll}}
+          {{yield
+            (hash
+              cannotScrollLeft=this.cannotScrollLeft
+              cannotScrollRight=this.cannotScrollRight
+              canScroll=this.canScroll
+              scrollLeft=this.scrollLeft
+              scrollRight=this.scrollRight
+            )
+            to="controls"
+          }}
         {{/if}}
-      </div>
+      {{else}}
+        {{#if this.canScroll}}
+          <div class="zoetrope-controls">
+            <button
+              type="button"
+              {{on "click" this.scrollLeft}}
+              disabled={{this.cannotScrollLeft}}
+            >Left</button>
+
+            <button
+              type="button"
+              {{on "click" this.scrollRight}}
+              disabled={{this.cannotScrollRight}}
+            >Right</button>
+          </div>
+        {{/if}}
+      {{/if}}
       {{#if (has-block "content")}}
         <div class="zoetrope-scroller" {{this.configureScroller}}>
           {{yield to="content"}}
         </div>
       {{/if}}
-
-      {{#if (has-block "empty")}}
-        {{yield to="empty"}}
-      {{/if}}
-    </div>
+    </section>
   </template>
 }
 

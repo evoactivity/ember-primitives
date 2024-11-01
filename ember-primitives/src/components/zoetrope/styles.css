@@ -17,6 +17,7 @@
   align-items: center;
   display: flex;
   padding-right: var(--zoetrope-offset, 0);
+  gap: 4px;
 }
 
 .zoetrope-scroller {
