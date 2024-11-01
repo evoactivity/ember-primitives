@@ -93,6 +93,11 @@ import { Zoetrope } from "ember-primitives";
       <a href="#" class="card">60</a>
     </:content>
   </Zoetrope>
+
+  <style>
+    /* some basic button styles */ .zoetrope-controls button { background: #fff; padding: 0.5rem;
+    border-radius: 0.25rem; color: #333; } .zoetrope-controls button:disabled { opacity: 0.5; }
+  </style>
 </template>
 ```
 
@@ -152,11 +157,6 @@ import { on } from "@ember/modifier";
       <a href="#" class="card">12</a>
     </:content>
   </Zoetrope>
-
-  <style>
-    .zoetrope-controls button { background: #fff; padding: 0.5rem; border-radius: 0.25rem; color:
-    #333; } .zoetrope-controls button:disabled { opacity: 0.5; }
-  </style>
 </template>
 ```
 
