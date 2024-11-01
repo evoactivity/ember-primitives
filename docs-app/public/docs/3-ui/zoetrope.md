@@ -1,34 +1,19 @@
 # Zoetrope
 
-A slider element built with browser native scrolling, with optional controls.
+A slider element built using browser native scrolling.
 
 <div class="featured-demo auto-height">
 
 ```gjs live preview no-shadow
 import { Zoetrope } from "ember-primitives";
-import { on } from "@ember/modifier";
 
 <template>
   <div class="demo">
-    <Zoetrope @offset={{40}} @gap={{8}}>
+    <Zoetrope @gap={{8}} @offset={{40}}>
       <:header>
         <h2>Heading</h2>
       </:header>
-      <:controls as |z|>
-        <div>
-          <button
-            type="button"
-            {{on "click" z.scrollLeft}}
-            disabled={{z.cannotScrollLeft}}
-          >&lt;</button>
 
-          <button
-            type="button"
-            {{on "click" z.scrollRight}}
-            disabled={{z.cannotScrollRight}}
-          >&gt;</button>
-        </div>
-      </:controls>
       <:content>
         <a href="#" class="card">1</a>
         <a href="#" class="card">2</a>
@@ -102,6 +87,7 @@ import { on } from "@ember/modifier";
     .card:nth-child(5n) { background: orange; } .card:nth-child(6n) { background: pink; }
     .card:nth-child(7n) { background: brown; } .card:nth-child(8n) { background: black; }
     .card:nth-child(9n) { background: mediumaquamarine; } .card:nth-child(10n) { background: gray; }
+    .featured-demo .glimdown-render { padding-left: 0; padding-right: 0; }
 
   </style>
 </template>
@@ -111,38 +97,43 @@ import { on } from "@ember/modifier";
 
 ## Features
 
-- Automatic and manual control over when the image renders.
-- Fallback accepts any content.
-- Optionally delay fallback rendering to avoid content flashing.
+- Automatic page size detection.
+- Provide your own custom control buttons.
+- CSS variables to control gap and offset.
+- Keyboard navigation.
 
 ## Anatomy
 
 ```js
-import { Avatar } from "ember-primitives";
+import { Zoetrope } from "ember-primitives";
 ```
 
 or for non-tree-shaking environments:
 
 ```js
-import { Avatar } from "ember-primitives/components/avatar";
+import { Zoetrope } from "ember-primitives/components/zoetrope";
 ```
 
 ```gjs
-import { Avatar } from "ember-primitives";
+import { Zoetrope } from "ember-primitives";
 
 <template>
-  <Avatar @src="..." as |a|>
-    <a.Image />
-    <a.Fallback>
-      any content here
-    </a.Fallback>
-  </Avatar>
+  <Zoetrope @gap={{8}} @offset={{40}}>
+    <:header>
+      <h2>Heading</h2>
+    </:header>
+
+    <:content>
+      <a href="#" class="card">1</a>
+      <a href="#" class="card">2</a>
+      <a href="#" class="card">3</a>
+      <a href="#" class="card">4</a>
+      <a href="#" class="card">5</a>
+      <a href="#" class="card">6</a>
+    </:content>
+  </Zoetrope>
 </template>
 ```
-
-## Accessibility
-
-An `alt` attribute is required, and in development, the UI will show an indication of a missing `alt` value if one is not provided.
 
 ## API Reference
 
@@ -152,18 +143,8 @@ import { ComponentSignature } from "kolay";
 <template>
   <ComponentSignature
     @package="ember-primitives"
-    @module="declarations/components/avatar"
-    @name="Avatar"
+    @module="declarations/components/zoetrope/index"
+    @name="Zoetrope"
   />
 </template>
 ```
-
-### State Attributes
-
-There are state attributes available on the the root element of this component.
-These may allow for stateful CSS-only stylings of the Avatar component.
-
-|      key       | description                                |
-| :------------: | :----------------------------------------- |
-| `data-loading` | the loading state of the image             |
-|  `data-error`  | will be "true" if the image failed to load |

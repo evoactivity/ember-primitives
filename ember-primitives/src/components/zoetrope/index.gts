@@ -7,45 +7,17 @@ import { on } from '@ember/modifier';
 
 import { modifier } from 'ember-modifier';
 
-function getRelativeBoundingClientRect(childElement: Element, parentElement: Element) {
-  if (!childElement || !parentElement) {
-    throw new Error('Both childElement and parentElement must be provided');
-  }
-
-  // Get the bounding rect of the child and parent elements
-  const childRect = childElement.getBoundingClientRect();
-  const parentRect = parentElement.getBoundingClientRect();
-
-  // Get computed styles of the parent element
-  const parentStyles = window.getComputedStyle(parentElement);
-
-  // Extract and parse parent's padding, and border, for all sides
-  const parentPaddingTop = parseFloat(parentStyles.paddingTop);
-  const parentPaddingLeft = parseFloat(parentStyles.paddingLeft);
-
-  const parentBorderTopWidth = parseFloat(parentStyles.borderTopWidth);
-  const parentBorderLeftWidth = parseFloat(parentStyles.borderLeftWidth);
-
-  // Calculate child's position relative to parent's content area (including padding and borders)
-  return {
-    width: childRect.width,
-    height: childRect.height,
-    top: childRect.top - parentRect.top - parentBorderTopWidth - parentPaddingTop,
-    left: childRect.left - parentRect.left - parentBorderLeftWidth - parentPaddingLeft,
-    bottom:
-      childRect.top - parentRect.top - parentBorderTopWidth - parentPaddingTop + childRect.height,
-    right:
-      childRect.left -
-      parentRect.left -
-      parentBorderLeftWidth -
-      parentPaddingLeft +
-      childRect.width,
-  };
-}
-
-interface ZoetropeSignature {
+export interface ZoetropeSignature {
   Args: {
+    /**
+     * The distance in pixels between each item in the slider.
+     */
     gap?: number;
+
+    /**
+     * The distance from the edge of the container to the first and last item, this allows
+     * the contents to overflow the container
+     */
     offset?: number;
   };
   Blocks: {
@@ -69,52 +41,40 @@ const DEFAULT_GAP = 8;
 const DEFAULT_OFFSET = 0;
 
 export class Zoetrope extends Component<ZoetropeSignature> {
+  scrollerElement: HTMLElement | null = null;
+
   @tracked currentlyScrolled = 0;
   @tracked scrollWidth = 0;
   @tracked offsetWidth = 0;
-  @tracked scrollerElement: HTMLElement | null = null;
 
-  private zoetropeModifier = modifier(
-    (element: HTMLElement, _, { gap, offset }: { gap: number; offset: number }) => {
-      this.scrollerElement = element.querySelector(`.zoetrope-scroller`);
-
-      if (!this.scrollerElement) {
-        throw new Error('scrollerElement not found');
-      }
-
-      const zoetropeResizeObserver = new ResizeObserver(() => {
-        if (!this.scrollerElement) {
-          return;
-        }
-
-        this.scrollWidth = this.scrollerElement.scrollWidth;
-        this.offsetWidth = this.scrollerElement.offsetWidth;
-      });
-
-      zoetropeResizeObserver.observe(element);
-
-      this.currentlyScrolled = this.scrollerElement.scrollLeft;
-
-      // check if css variable is already set
-      if (
-        element.style.getPropertyValue('--zoetrope-gap') !== `${gap}px` &&
-        element.style.getPropertyValue('--zoetrope-offset') !== `${offset}px`
-      ) {
-        element.style.setProperty('--zoetrope-gap', `${gap}px`);
-        element.style.setProperty('--zoetrope-offset', `${offset}px`);
-      }
-
-      this.scrollerElement.addEventListener('scroll', this.scrollListener);
-      this.scrollerElement.addEventListener('keydown', this.tabListener);
-
-      return () => {
-        this.scrollerElement?.removeEventListener('scroll', this.scrollListener);
-        this.scrollerElement?.removeEventListener('keydown', this.tabListener);
-
-        zoetropeResizeObserver.unobserve(element);
-      };
+  private setCSSVariables = modifier(
+    (element: HTMLElement, _: unknown, { gap, offset }: { gap: number; offset: number }) => {
+      if (gap) element.style.setProperty('--zoetrope-gap', `${gap}px`);
+      if (offset) element.style.setProperty('--zoetrope-offset', `${offset}px`);
     }
   );
+
+  private configureScroller = modifier((element: HTMLElement) => {
+    this.scrollerElement = element;
+    this.currentlyScrolled = element.scrollLeft;
+
+    const zoetropeResizeObserver = new ResizeObserver(() => {
+      this.scrollWidth = element.scrollWidth;
+      this.offsetWidth = element.offsetWidth;
+    });
+
+    zoetropeResizeObserver.observe(element);
+
+    element.addEventListener('scroll', this.scrollListener, { passive: true });
+    element.addEventListener('keydown', this.tabListener);
+
+    return () => {
+      element.removeEventListener('scroll', this.scrollListener);
+      element.removeEventListener('keydown', this.tabListener);
+
+      zoetropeResizeObserver.unobserve(element);
+    };
+  });
 
   private tabListener = (event: KeyboardEvent) => {
     const target = event.target as HTMLElement;
@@ -316,7 +276,7 @@ export class Zoetrope extends Component<ZoetropeSignature> {
   }
 
   <template>
-    <div class="zoetrope" {{this.zoetropeModifier gap=this.gap offset=this.offset}}>
+    <div class="zoetrope" {{this.setCSSVariables gap=this.gap offset=this.offset}} ...attributes>
       <div class="zoetrope-header">
         {{yield to="header"}}
       </div>
@@ -353,7 +313,7 @@ export class Zoetrope extends Component<ZoetropeSignature> {
         {{/if}}
       </div>
       {{#if (has-block "content")}}
-        <div class="zoetrope-scroller">
+        <div class="zoetrope-scroller" {{this.configureScroller}}>
           {{yield to="content"}}
         </div>
       {{/if}}
@@ -366,3 +326,39 @@ export class Zoetrope extends Component<ZoetropeSignature> {
 }
 
 export default Zoetrope;
+
+function getRelativeBoundingClientRect(childElement: Element, parentElement: Element) {
+  if (!childElement || !parentElement) {
+    throw new Error('Both childElement and parentElement must be provided');
+  }
+
+  // Get the bounding rect of the child and parent elements
+  const childRect = childElement.getBoundingClientRect();
+  const parentRect = parentElement.getBoundingClientRect();
+
+  // Get computed styles of the parent element
+  const parentStyles = window.getComputedStyle(parentElement);
+
+  // Extract and parse parent's padding, and border, for all sides
+  const parentPaddingTop = parseFloat(parentStyles.paddingTop);
+  const parentPaddingLeft = parseFloat(parentStyles.paddingLeft);
+
+  const parentBorderTopWidth = parseFloat(parentStyles.borderTopWidth);
+  const parentBorderLeftWidth = parseFloat(parentStyles.borderLeftWidth);
+
+  // Calculate child's position relative to parent's content area (including padding and borders)
+  return {
+    width: childRect.width,
+    height: childRect.height,
+    top: childRect.top - parentRect.top - parentBorderTopWidth - parentPaddingTop,
+    left: childRect.left - parentRect.left - parentBorderLeftWidth - parentPaddingLeft,
+    bottom:
+      childRect.top - parentRect.top - parentBorderTopWidth - parentPaddingTop + childRect.height,
+    right:
+      childRect.left -
+      parentRect.left -
+      parentBorderLeftWidth -
+      parentPaddingLeft +
+      childRect.width,
+  };
+}
