@@ -10,12 +10,12 @@ Here that content is a [`<CommandPalette>`](/5-floaty-bits/command-palette.md), 
 
 ```gjs live preview no-shadow
 import { CommandPalette, Dialog } from "ember-primitives";
-import { tracked } from "@glimmer/tracking";
+import { cell } from "ember-resources";
 
 const COMMANDS = ["New File", "New Folder", "Find in Files", "Open Settings"];
 
-const query = tracked("");
-const setQuery = (value) => (query.value = value);
+const query = cell("");
+const setQuery = (value) => (query.current = value);
 const matching = (term) =>
   COMMANDS.filter((command) => command.toLowerCase().includes(term.trim().toLowerCase()));
 
@@ -24,7 +24,7 @@ const matching = (term) =>
 
   <Dialog closedby="any" as |d|>
     <CommandPalette
-      @items={{(matching query.value)}}
+      @items={{(matching query.current)}}
       @onQueryChange={{setQuery}}
       @onSelect={{d.close}}
       @onOpen={{d.open}}

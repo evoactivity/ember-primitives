@@ -9,21 +9,21 @@ A combobox over a listbox. The <kbd>⌘</kbd><kbd>K</kbd> pattern.
 ```gjs live preview no-shadow
 import { CommandPalette, Dialog } from "ember-primitives";
 import { fn } from "@ember/helper";
-import { tracked } from "@glimmer/tracking";
+import { cell } from "ember-resources";
 
-const ran = tracked("");
+const ran = cell("");
 
 /**
  * `@onSelect` is handed the entry, so this is both what the row does and
  * where the dialog closes. `close` is curried in from the block.
  */
 const run = (close, command) => {
-  ran.value = command.label;
+  ran.current = command.label;
   close();
 };
 
-const query = tracked("");
-const setQuery = (value) => (query.value = value);
+const query = cell("");
+const setQuery = (value) => (query.current = value);
 const matching = (term) =>
   COMMANDS.filter((command) => command.label.toLowerCase().includes(term.trim().toLowerCase()));
 
@@ -54,7 +54,7 @@ const COMMANDS = [
 <template>
   <Dialog as |d|>
     <CommandPalette
-      @items={{(matching query.value)}}
+      @items={{(matching query.current)}}
       @onQueryChange={{setQuery}}
       @onSelect={{fn run d.close}}
       @onOpen={{d.open}}
@@ -65,8 +65,8 @@ const COMMANDS = [
 
   <p>Press <kbd>Ctrl</kbd> / <kbd>⌘</kbd> + <kbd>K</kbd> to open it.</p>
 
-  {{#if ran.value}}
-    <p class="last-run">Ran: <strong>{{ran.value}}</strong></p>
+  {{#if ran.current}}
+    <p class="last-run">Ran: <strong>{{ran.current}}</strong></p>
   {{/if}}
 
   <style>
@@ -170,11 +170,11 @@ Leave out the `<Dialog>` and the palette is a search box with a list under it, f
 
 ```gjs live preview no-shadow
 import { CommandPalette } from "ember-primitives";
-import { tracked } from "@glimmer/tracking";
+import { cell } from "ember-resources";
 
-const opened = tracked("");
-const query = tracked("");
-const setQuery = (value) => (query.value = value);
+const opened = cell("");
+const query = cell("");
+const setQuery = (value) => (query.current = value);
 const matching = (term) =>
   PAGES.filter((page) => page.label.toLowerCase().includes(term.trim().toLowerCase()));
 
@@ -184,20 +184,20 @@ const PAGES = [
   { label: "Dialog", description: "A modal window over the page" },
 ];
 
-const go = (page) => (opened.value = page.label);
+const go = (page) => (opened.current = page.label);
 
 <template>
   <div class="inline-palette">
     <CommandPalette
-      @items={{(matching query.value)}}
+      @items={{(matching query.current)}}
       @onQueryChange={{setQuery}}
       @onSelect={{go}}
       @placeholder="Search the docs…"
     />
   </div>
 
-  {{#if opened.value}}
-    <p>Opened: <strong>{{opened.value}}</strong></p>
+  {{#if opened.current}}
+    <p>Opened: <strong>{{opened.current}}</strong></p>
   {{/if}}
 
   <style>
@@ -281,9 +281,9 @@ Leave `@items` off and pass a block instead. Then you render the rows. Choosing 
 
 ```gjs live preview no-shadow
 import { CommandPalette } from "ember-primitives";
-import { tracked } from "@glimmer/tracking";
+import { cell } from "ember-resources";
 
-const picked = tracked("");
+const picked = cell("");
 
 const PEOPLE = [
   {
@@ -311,7 +311,7 @@ const matching = (query) =>
  * `@onSelect` is handed the event, and the row is `event.target.closest`.
  */
 const pick = (event) => {
-  picked.value = event.target.closest("[role=option]").dataset.name;
+  picked.current = event.target.closest("[role=option]").dataset.name;
 };
 
 <template>
@@ -335,8 +335,8 @@ const pick = (event) => {
     </CommandPalette>
   </div>
 
-  {{#if picked.value}}
-    <p>Picked: <strong>{{picked.value}}</strong></p>
+  {{#if picked.current}}
+    <p>Picked: <strong>{{picked.current}}</strong></p>
   {{/if}}
 
   <style>
@@ -440,13 +440,13 @@ const pick = (event) => {
 
 ```gjs live preview no-shadow
 import { CommandPalette } from "ember-primitives";
-import { tracked } from "@glimmer/tracking";
+import { cell } from "ember-resources";
 import { getPromiseState } from "reactiveweb/get-promise-state";
 
 const EMPTY = [];
 
-const query = tracked("");
-const setQuery = (value) => (query.value = value);
+const query = cell("");
+const setQuery = (value) => (query.current = value);
 
 const planets = new Map();
 const planetName = async (url) => {
@@ -490,7 +490,7 @@ const search = (term) => {
 };
 
 <template>
-  {{#let (getPromiseState (search query.value)) as |state|}}
+  {{#let (getPromiseState (search query.current)) as |state|}}
     <div class="swapi">
       <CommandPalette
         @items={{if state.resolved state.resolved EMPTY}}
@@ -507,7 +507,7 @@ const search = (term) => {
           {{state.resolved.length}}
           found
         {{else if state.resolved}}
-          Nobody matches “{{query.value}}”
+          Nobody matches “{{query.current}}”
         {{else}}
           Type a name: luke, skywalker, r2…
         {{/if}}
